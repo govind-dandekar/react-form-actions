@@ -2,73 +2,78 @@ import { useActionState } from 'react';
 
 import { isEmail, isNotEmpty, isEqualToOtherValue, hasMinLength } from '../util/validation'
 
+// can moved outside of component fx so action fx isn't re-created when
+// component fx re-executes; if action fx uses state, then needs to be
+// inside component fx
 // with useActionState, signupAction called differently, and first param
-// is old form state
-export default function Signup() {
-  function signupAction(prevFormState, formData){
-    // formData created by react (like an event)
-    // input elements must have "name" prop set
-    // react automatically resets form on submission
-    const email = formData.get('email');
-    const password = formData.get('password');
-    const confirmPassword = formData.get('confirm-password');
-    const firstName = formData.get('first-name')
-    const lastName = formData.get('last-name')
-    const role = formData.get('role')
-    const terms = formData.get('terms')
-    // will return [] if multiple boxes are checked
-    const acquisitionChannel = formData.getAll('acquisition')
+// is old form state (prevFormState below)
+function signupAction(prevFormState, formData){
+  // formData created by react (like an event)
+  // input elements must have "name" prop set
+  // react automatically resets form on submission
+  const email = formData.get('email');
+  const password = formData.get('password');
+  const confirmPassword = formData.get('confirm-password');
+  const firstName = formData.get('first-name')
+  const lastName = formData.get('last-name')
+  const role = formData.get('role')
+  const terms = formData.get('terms')
+  // will return [] if multiple boxes are checked
+  const acquisitionChannel = formData.getAll('acquisition')
 
-    let errors = [];
+  let errors = [];
 
-    if (!isEmail(email)) {
-      errors.push('Invalid email address.')
-    }
+  if (!isEmail(email)) {
+    errors.push('Invalid email address.')
+  }
 
-    if (!isNotEmpty(password) || !hasMinLength(password, 6) ){
-      errors.push('You must provide a password with at least six characters')
-    }
+  if (!isNotEmpty(password) || !hasMinLength(password, 6) ){
+    errors.push('You must provide a password with at least six characters')
+  }
 
-    if (!isEqualToOtherValue(password, confirmPassword)){
-      errors.push('Passwords do not match')
-    }
+  if (!isEqualToOtherValue(password, confirmPassword)){
+    errors.push('Passwords do not match')
+  }
 
-    if (!isNotEmpty(firstName) || !isNotEmpty(lastName)){
-      errors.push('Please provide both your first and last name')
-    }
+  if (!isNotEmpty(firstName) || !isNotEmpty(lastName)){
+    errors.push('Please provide both your first and last name')
+  }
 
-    if (!isNotEmpty(role)){
-      errors.push('Please select a role')
-    }
+  if (!isNotEmpty(role)){
+    errors.push('Please select a role')
+  }
 
-    if (!terms) {
-      errors.push('You must agree to the terms and conditions.')
-    }
+  if (!terms) {
+    errors.push('You must agree to the terms and conditions.')
+  }
 
-    if (acquisitionChannel.length === 0){
-      errors.push('Please selecte at least one acquisition channel.')
-    }
+  if (acquisitionChannel.length === 0){
+    errors.push('Please selecte at least one acquisition channel.')
+  }
 
-    // must implement useActionState to access returned object
-    if (errors.length > 0){
-      return {
-        errors: errors,
-        // include info on entered values to pre-populate input fields
-        // add as defaultValue on form; react will use when form resets
-        enteredValues: {
-          email,
-          password,
-          confirmPassword,
-          firstName,
-          lastName,
-          acquisitionChannel,
-          terms
-        }
+  // must implement useActionState to access returned object
+  if (errors.length > 0){
+    return {
+      errors: errors,
+      // include info on entered values to pre-populate input fields
+      // add as defaultValue on form; react will use when form resets
+      enteredValues: {
+        email,
+        password,
+        confirmPassword,
+        firstName,
+        lastName,
+        acquisitionChannel,
+        terms
       }
     }
-
-    return { errors: null}
   }
+
+  return { errors: null}
+}
+
+export default function Signup() {
+  
 
   // pass action fx as first arg, initial state as second arg
   // returns array w/ three elements: current form state, 
