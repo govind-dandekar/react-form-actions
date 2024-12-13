@@ -1,7 +1,11 @@
+import { useActionState } from 'react';
+
 import { isEmail, isNotEmpty, isEqualToOtherValue, hasMinLength } from '../util/validation'
 
+// with useActionState, signupAction called differently, and first param
+// is old form state
 export default function Signup() {
-  function signupAction(formData){
+  function signupAction(prevFormState, formData){
     // formData created by react (like an event)
     // input elements must have "name" prop set
     // react automatically resets form on submission
@@ -29,7 +33,7 @@ export default function Signup() {
       errors.push('Passwords do not match')
     }
 
-    if (!isNotEmpty(firstName) || !isNoteEmpty(lastName)){
+    if (!isNotEmpty(firstName) || !isNotEmpty(lastName)){
       errors.push('Please provide both your first and last name')
     }
 
@@ -45,27 +49,61 @@ export default function Signup() {
       errors.push('Please selecte at least one acquisition channel.')
     }
 
-    console.log(email);
+    // must implement useActionState to access returned object
+    if (errors.length > 0){
+      return {
+        errors: errors,
+        // include info on entered values to pre-populate input fields
+        // add as defaultValue on form; react will use when form resets
+        enteredValues: {
+          email,
+          password,
+          confirmPassword,
+          firstName,
+          lastName,
+          acquisitionChannel,
+          terms
+        }
+      }
+    }
+
+    return { errors: null}
   }
+
+  // pass action fx as first arg, initial state as second arg
+  // returns array w/ three elements: current form state, 
+  // updated formAction fx wrapper -- should be set as action prop on form,
+  // pending -- true / false depending on if form submission is pending
+  const [formState, formAction] = useActionState(signupAction, { errors: null })
   
   // react 19 added support for action prop
   // normally used to define URL to which data posted when form submitted
   // in react, react overrides action prop and fx executed
   // when form submitted; react will call event.preventDefault()  
   return (
-    <form action={signupAction}>
+    <form action={formAction}>
       <h2>Welcome on board!</h2>
       <p>We just need a little bit of data from you to get you started 🚀</p>
 
       <div className="control">
         <label htmlFor="email">Email</label>
-        <input id="email" type="email" name="email" />
+        <input 
+          id="email" 
+          type="email" 
+          name="email" 
+          defaultValue={formState.enteredValues?.email} 
+        />
       </div>
 
       <div className="control-row">
         <div className="control">
           <label htmlFor="password">Password</label>
-          <input id="password" type="password" name="password" />
+          <input 
+            id="password" 
+            type="password" 
+            name="password" 
+            defaultValue={formState.enteredValues?.password}  
+          />
         </div>
 
         <div className="control">
@@ -74,6 +112,7 @@ export default function Signup() {
             id="confirm-password"
             type="password"
             name="confirm-password"
+            defaultValue={formState.enteredValues?.confirmPassword} 
           />
         </div>
       </div>
@@ -83,18 +122,31 @@ export default function Signup() {
       <div className="control-row">
         <div className="control">
           <label htmlFor="first-name">First Name</label>
-          <input type="text" id="first-name" name="first-name" />
+          <input 
+            type="text" 
+            id="first-name" 
+            name="first-name" 
+            defaultValue={formState.enteredValues?.firstName} 
+          />
         </div>
 
         <div className="control">
           <label htmlFor="last-name">Last Name</label>
-          <input type="text" id="last-name" name="last-name" />
+          <input 
+            type="text" 
+            id="last-name" 
+            name="last-name" 
+            defaultValue={formState.enteredValues?.lastName} />
         </div>
       </div>
 
       <div className="control">
         <label htmlFor="phone">What best describes your role?</label>
-        <select id="role" name="role">
+        <select 
+          id="role" 
+          name="role"
+          defaultValue={formState.enteredValues?.role}
+        >
           <option value="student">Student</option>
           <option value="teacher">Teacher</option>
           <option value="employee">Employee</option>
@@ -111,6 +163,7 @@ export default function Signup() {
             id="google"
             name="acquisition"
             value="google"
+            defaultChecked={formState.enteredValues?.acquisitionChannel.includes('google')}
           />
           <label htmlFor="google">Google</label>
         </div>
@@ -121,22 +174,37 @@ export default function Signup() {
             id="friend"
             name="acquisition"
             value="friend"
+            defaultChecked={formState.enteredValues?.acquisitionChannel.includes('friend')}
           />
           <label htmlFor="friend">Referred by friend</label>
         </div>
 
         <div className="control">
-          <input type="checkbox" id="other" name="acquisition" value="other" />
+          <input 
+            type="checkbox" 
+            id="other" 
+            name="acquisition" 
+            value="other" 
+            defaultChecked={formState.enteredValues?.acquisitionChannel.includes('other')}
+          />
           <label htmlFor="other">Other</label>
         </div>
       </fieldset>
 
       <div className="control">
         <label htmlFor="terms-and-conditions">
-          <input type="checkbox" id="terms-and-conditions" name="terms" />I
-          agree to the terms and conditions
+          <input 
+          type="checkbox" 
+          id="terms-and-conditions" 
+          name="terms" 
+          defaultChecked={formState.enteredValues?.terms}/>
+          I agree to the terms and conditions
         </label>
       </div>
+
+      {formState.errors && <ul className="error">
+            {formState.errors.map((error) => (<li key={error}>{error}</li>))}
+          </ul>}
 
       <p className="form-actions">
         <button type="reset" className="button button-flat">
